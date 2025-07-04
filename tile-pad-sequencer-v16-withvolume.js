@@ -23,6 +23,11 @@ tileSequencer = function(){
 var audioCtx = new (window.AudioContext || window.webkitAudioContext)();
 
 
+//this should create the post function needed to update the loop library stored on the server
+// window.post = function(url, data) {
+//   return fetch(url, {method: "POST", body: JSON.stringify(data)});
+// }
+
 // Create a compressor node
 var compressor = audioCtx.createDynamicsCompressor();
 compressor.threshold.value = -30;
@@ -141,6 +146,7 @@ var ctx = c.getContext("2d");
 var clickcount = 0;
 
 var rectangle = [];
+// post('./data.json', rectangle);
 var rectangleghost = [];
 var building = false;
 var rectanglehue = 0;
@@ -155,7 +161,7 @@ var modulationrate = 12;
 var modulationmax = 1660;
 var modulationmin = 330;
 var soundpatch = 1;
-var soundpatchcount = 7;
+var soundpatchcount = 8;
 var playstatus = 'paused';
 var temporeference = 32;
 
@@ -626,7 +632,7 @@ playSoundLibrary = {
 		gainNode3.gain.setTargetAtTime(0.05*volume, audioCtx.currentTime,.5);
 		gainNode3.gain.setTargetAtTime(0, audioCtx.currentTime + 0.05, duration/10900);
 		biquadFilter3b.frequency.value = freq/4;
-		oscillator3b.frequency.value = freq/2;
+		oscillator3b.frequency.value = freq/2.5;
 		gainNode3b.gain.value = 0;
 		gainNode3b.gain.setTargetAtTime(0.1*volume, audioCtx.currentTime,.1);
 		gainNode3b.gain.setTargetAtTime(0, audioCtx.currentTime + 0.05, duration/30900);
@@ -679,7 +685,18 @@ playSoundLibrary = {
 		oscillator7.frequency.setTargetAtTime(freq/2,audioCtx.currentTime, .1);
 		gainNode7.gain.setTargetAtTime(.01*volume,audioCtx.currentTime, duration/15000);;
 		gainNode7.gain.setTargetAtTime(0,audioCtx.currentTime+.5, duration/15000);
-	}
+	},
+  8:function(freq,duration){
+    if (freq<56){freq=56}
+    oscillator7.frequency.setTargetAtTime(freq/2,audioCtx.currentTime, .15);
+    gainNode7.gain.setTargetAtTime(.01*volume,audioCtx.currentTime, duration/15000);;
+    gainNode7.gain.setTargetAtTime(0,audioCtx.currentTime+.5, duration/18000);
+    biquadFilter2.frequency.value = freq*1.5;
+		oscillator2.frequency.value = freq;
+		gainNode2.gain.setTargetAtTime(.5*volume, audioCtx.currentTime, .5);
+		gainNode2.gain.setTargetAtTime(0, audioCtx.currentTime + 0.01, duration/1700);
+		biquadFilter2.frequency.setTargetAtTime(freq, audioCtx.currentTime, duration/290);
+  }
 };
 
 document.getElementById('generate_button').addEventListener('click', function(e){
@@ -889,6 +906,23 @@ document.getElementById('tempo_down_button').addEventListener('mouseup',function
 	e.preventDefault();
 	clearInterval(buttonInterval);
 });
+
+// document.getElementById('share_button').addEventListener('mouseup', function(e){
+//   e.preventDefault();
+//   fetch('./data.json')
+//     .then(
+//         function(response) {
+//           if (response.status !== 200) {
+//               console.log(response.status);
+//               return;
+//           }
+//           response.json().then(function(data) {
+//             console.log(data);
+//             //post('./data.json', rectangle);
+//           });
+//         }
+//     )
+// });
 
 var drawInterval
 drawLoop = function(){
