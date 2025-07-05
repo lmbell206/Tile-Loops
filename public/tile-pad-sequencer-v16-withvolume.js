@@ -51,6 +51,9 @@ var oscillator1 = audioCtx.createOscillator();
 var gainNode1 = audioCtx.createGain();
 var biquadFilter1 = audioCtx.createBiquadFilter();
 
+
+//create the oscillators and signal flow for each soundpatch
+
 oscillator1.type = 'square';
 biquadFilter1.type = "bandpass";
 oscillator1.connect(biquadFilter1);
@@ -257,6 +260,9 @@ document.getElementById('volume_down_button').addEventListener('touchend', funct
 	clearInterval(buttonInterval);
 });
 
+
+//sound patch selection
+
 document.getElementById('sound_toggle_button').addEventListener('touchstart', function(e){
 	e.preventDefault();
 	if (soundpatch < soundpatchcount) {
@@ -268,6 +274,8 @@ document.getElementById('sound_toggle_button').addEventListener('touchstart', fu
 	rectanglehue = (360/soundpatchcount) * soundpatch;
 	document.getElementById('info').innerHTML = 'sound patch: ' + soundpatch;
 });
+
+//play button
 document.getElementById('sequence_swipe_button').addEventListener('touchstart',function(e){
 	e.preventDefault();
 	if (playstatus == 'paused') {
@@ -283,6 +291,8 @@ document.getElementById('sequence_swipe_button').addEventListener('touchstart',f
 		clearInterval(modulationInterval);
 	}
 });
+
+//tempo change
 
 document.getElementById('tempo_up_button').addEventListener('touchstart',function(e){
 	e.preventDefault();
@@ -315,6 +325,7 @@ document.getElementById('tempo_down_button').addEventListener('touchend',functio
 	e.preventDefault();
 	clearInterval(buttonInterval);
 });
+// mouse controls for making tiles
 
 c.addEventListener('click', function(e){
 	e.preventDefault();
@@ -341,6 +352,8 @@ c.addEventListener('click', function(e){
 
 
 });
+
+//touch controls for making tiles
 
 c.addEventListener('touchstart', function(e){
 	e.preventDefault();
@@ -385,6 +398,9 @@ c.addEventListener('touchend', function(e){
 		buildit();
 	}
 });
+
+//create the tile
+
 drawit = function() {
 	ctx.fillStyle = 'hsl('+ backgroundhue + ', 100%, 50%)';
 	ctx.fillRect(0,0,screenwidth,screenheight);
@@ -409,6 +425,8 @@ drawit = function() {
 //	ctx.fillStyle = 'hsl(' + (360/5) * soundpatch - soundpatch + ', 100%, 50%)';
 //	ctx.fillRect(screenwidth-40,0,40,40)
 }
+//this function iteratively changes the background hue and slowly shrinks tiles that have been popped.
+//also checks for if a tile has fully disappeared and removes it from the rectangle list if so
 animateit = function() {
 	rectanglehue = rectanglehue + 3;
 	backgroundhue = backgroundhue + rectangle.length*.1;
@@ -425,6 +443,8 @@ animateit = function() {
 		}
 	}
 }
+
+//build the tile that has been drawn and store it in the rectangle array
 buildit = function() {
 	if (pointa.x >pointb.x && pointa.y>pointb.y) {
 		var tempx = pointb.x;
@@ -446,6 +466,7 @@ buildit = function() {
 	rectangle[rectangleid].played = false;
 	rectangle[rectangleid].sound = soundpatch;
 
+//this keeps information on rectangles that are fading, they get drawn each interval but do not generate sound.
 	rectangleghost[rectangleid] = {};
 	rectangleghost[rectangleid].x = pointa.x;
 	rectangleghost[rectangleid].y = pointa.y;
@@ -464,68 +485,89 @@ buildit = function() {
 	pointb.y = 0;
 	building = false;
 }
+
+//this checks to see if a tile has been activated by the current position of the play bar during the current interval
 handleTap = function(x,y) {
-	var x = x;
-	var y = y;
-	var i = 0;
-	var hitstatus = false;
-	for (i = 0; i < rectangle.length; i= i + 1){
-		if (
-			rectangle[i].l < 0 && rectangle[i].h < 0 &&
-			x >= rectangle[i].x + rectangle[i].l &&
-			x <= rectangle[i].x &&
-			y >= rectangle[i].y + rectangle[i].h &&
-			y <= rectangle[i].y &&
+//	let i = 0;
+	let hitstatus = false;
+  let itsAhit = function(i){
+    rectangleghost.splice(i,1);
+    rectangle[i].fading = true;
+    hitstatus = true;
+  };
+
+	for (i = rectangle.length - 1 ; i >= 0; i--){
+    let fading = rectangle[i].fading;
+    if (fading){
+      continue;
+    }
+    let rectangle_x = rectangle[i].x;
+    let rectangle_y = rectangle[i].y;
+    let rectangle_l = rectangle[i].l;
+    let rectangle_h = rectangle[i].h
+    if (
+			rectangle_l < 0 && rectangle_h < 0 &&
+			x >= rectangle_x + rectangle_l &&
+			x <= rectangle_x &&
+			y >= ectangle_y + rectangle_h &&
+			y <= ectangle_y
+		//	rectangle[i].fading == false
+		){
+      itsAhit(i);
+      break;
+		//	rectangleghost.splice(i,1);
+		//	rectangle[i].fading = true;
+		//	hitstatus = true;
+		//	continue;
+		} else if (
+			rectangle_l > 0 &&
+			rectangle_h < 0 &&
+			x >= rectangle_x &&
+			x <= rectangle_x + rectangle_l &&
+			y >= rectangle_y + rectangle_h &&
+			y <= rectangle_y
+		//	rectangle[i].fading == false
+		){
+      itsAhit(i);
+      break;
+		//		rectangleghost.splice(i,1);
+		//		rectangle[i].fading = true;
+		//		hitstatus = true;
+		//		continue;
+		} else if (
+			rectangle_l < 0 &&
+			rectangle_h > 0 &&
+			x >=rectangle_x + rectangle_l &&
+			x <= rectangle_x &&
+			y >= rectangle_y &&
+			y <= rectangle_y+rectangle_h
+			//rectangle[i].fading == false
+		){
+      itsAhit(i);
+      break;
+	//			rectangleghost.splice(i,1);
+	//			rectangle[i].fading = true;
+	//			hitstatus = true;
+//				continue;
+		} else if (
+			x >= rectangle_x &&
+			x <= rectangle_x+rectangle_l &&
+			y >= rectangle_y &&
+			y <= rectangle_y+rectangle_h &&
 			rectangle[i].fading == false
 		){
-			rectangleghost.splice(i,1);
-			rectangle[i].fading = true;
-			hitstatus = true;
-			continue;
-		}
-		if (
-			rectangle[i].l > 0 &&
-			rectangle[i].h < 0 &&
-			x >= rectangle[i].x &&
-			x <= rectangle[i].x + rectangle[i].l &&
-			y >= rectangle[i].y + rectangle[i].h &&
-			y <= rectangle[i].y &&
-			rectangle[i].fading == false
-		){
-				rectangleghost.splice(i,1);
-				rectangle[i].fading = true;
-				hitstatus = true;
-				continue;
-		}
-		if (
-			rectangle[i].l < 0 &&
-			rectangle[i].h > 0 &&
-			x >=rectangle[i].x + rectangle[i].l &&
-			x <= rectangle[i].x &&
-			y >= rectangle[i].y &&
-			y <= rectangle[i].y+rectangle[i].h &&
-			rectangle[i].fading == false
-		){
-				rectangleghost.splice(i,1);
-				rectangle[i].fading = true;
-				hitstatus = true;
-				continue;
-		}
-		if (
-			x >= rectangle[i].x &&
-			x <= rectangle[i].x+rectangle[i].l &&
-			y >= rectangle[i].y &&
-			y <= rectangle[i].y+rectangle[i].h &&
-			rectangle[i].fading == false
-		){
-				rectangleghost.splice(i,1);
-				rectangle[i].fading = true;
-				hitstatus = true;
-				continue;
+      itsAhit(i);
+      break;
+//				rectangleghost.splice(i,1);
+//				rectangle[i].fading = true;
+//				hitstatus = true;
+//				continue;
 		}
 	}
 	return hitstatus;
 }
+
+//this plays the appropriate sound
 handleTapSequence = function(sequencelocation) {
 	var x = sequencelocation;
 	for (var i = 0;i<rectangle.length;i++){
@@ -556,6 +598,8 @@ handleTapSequence = function(sequencelocation) {
 		}
 	}
 }
+
+//this moves the current location on the sequence
 sequenceSwipe = function() {
 	clearInterval(sequenceInterval);
 	for (var i = 0; i < rectangleghost.length; i = i+1){
@@ -570,6 +614,8 @@ sequenceSwipe = function() {
 		rectangle[i].fading = rectangleghost[i].fading;
 		rectangle[i].sound = rectangleghost[i].sound;
 	}
+
+
 	var sequencelocation = 0;
 	globalmodulation = 0;
 	sequenceInterval = setInterval(function(){
@@ -586,6 +632,9 @@ sequenceSwipe = function() {
 function randomNumber(min_range, max_range) {
 	return Math.floor((Math.random() * max_range) + min_range);
 }
+
+//these are the functions for playing each sound patch at the pitch and duration indicated by the tile being triggered.
+//this is where additional sound design can occur.
 playSoundLibrary = {
 	1:function(freq,duration){
 		// set floor for frequency
@@ -728,6 +777,8 @@ function randomNumber(min_range, max_range) {
 	return Math.floor((Math.random() * max_range) + min_range);
 }
 
+
+//this makes a random sequence
 generate = function(){
 	var axtemp = new Number(0);
 	var aytemp = new Number(0);
@@ -924,6 +975,9 @@ document.getElementById('tempo_down_button').addEventListener('mouseup',function
 //     )
 // });
 
+
+// this is the main loop that draws the current state of the sequencer
+// it als runs the necessary checks to see if a tile has been hit and if so, plays the appropriate sound.
 var drawInterval
 drawLoop = function(){
 	clearInterval(drawInterval);
