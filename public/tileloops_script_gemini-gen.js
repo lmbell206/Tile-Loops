@@ -64,22 +64,13 @@ gainNode2.connect(masterFilter);
 gainNode2.gain.value = 0;
 
 var oscillator3 = audioCtx.createOscillator();
-// var oscillator3b = audioCtx.createOscillator(); // Second oscillator for patch 3
 var gainNode3 = audioCtx.createGain();
-// var gainNode3b = audioCtx.createGain(); // Second gain node for patch 3
 var biquadFilter3 = audioCtx.createBiquadFilter();
-// var biquadFilter3b = audioCtx.createBiquadFilter(); // Second filter for patch 3
 oscillator3.connect(biquadFilter3);
-// oscillator3b.connect(biquadFilter3b);
 oscillator3.start(0);
-// oscillator3b.start(0);
 biquadFilter3.connect(gainNode3);
-// biquadFilter3.connect(gainNode3b); // Patch 3 connects one filter to two gain nodes
-// biquadFilter3b.connect(gainNode3b); // Patch 3 also connects second filter to second gain node
 gainNode3.connect(masterFilter);
-// gainNode3b.connect(masterFilter);
 gainNode3.gain.value = 0;
-// gainNode3b.gain.value = 0;
 
 var oscillator4 = audioCtx.createOscillator();
 var gainNode4 = audioCtx.createGain();
@@ -119,117 +110,108 @@ gainNode7.gain.value = 0;
 
 // playSoundLibrary is also moved to global scope
 var playSoundLibrary = {
-	1:function(freq,duration){
-		// set floor for frequency
-		if (freq<190){freq=190}
-		oscillator1.frequency.value = freq/5 + 100;
-		biquadFilter1.frequency.value = freq/2;
-		gainNode1.gain.setTargetAtTime(.05*volume, audioCtx.currentTime, .5);
-		gainNode1.gain.setTargetAtTime(0, audioCtx.currentTime + 0.1, duration/22800);
-		biquadFilter1.frequency.setTargetAtTime(0, audioCtx.currentTime, duration/100 + .2);
+	1:function(freq,duration, time){
+        const now = audioCtx.currentTime;
+        if (freq<190){freq=190}
+        oscillator1.frequency.value = freq/5 + 100;
+        biquadFilter1.frequency.value = freq/2;
+        gainNode1.gain.setTargetAtTime(.05*volume, time, .5);
+        gainNode1.gain.setTargetAtTime(0, time + 0.1, duration/22800);
+        biquadFilter1.frequency.setTargetAtTime(0, time, duration/100 + .2);
+    },
+
+    2:function(freq,duration, time){
+        const now = audioCtx.currentTime;
+        if (freq<56){freq=56}
+        biquadFilter2.frequency.value = freq*1.5;
+        oscillator2.frequency.value = freq;
+        gainNode2.gain.setTargetAtTime(.5*volume, time, .5);
+        gainNode2.gain.setTargetAtTime(0, time + 0.01, duration/7900);
+        biquadFilter2.frequency.setTargetAtTime(freq, time, duration/200);
+    },
+
+	3: function(freq, duration, time) {
+	    const now = audioCtx.currentTime;
+	    // Ensure minimum frequency
+	    if (freq < 56) { freq = 56; } // A common floor, adjust as needed
+
+	    // Oscillator settings
+	    oscillator3.type = 'square';
+	    oscillator3.frequency.value = freq * 0.700;
+	    oscillator3.detune.value = -1.0; // Apply detune
+
+	    // Filter settings
+	    biquadFilter3.type = 'highpass';
+	    biquadFilter3.frequency.value = freq * 0.200;
+	    biquadFilter3.Q.value = 1.400;
+	    biquadFilter3.gain.value = 0.0; // Apply filter gain
+
+	    // Gain envelope (ADSR)
+	    gainNode3.gain.cancelScheduledValues(now);
+	    gainNode3.gain.setValueAtTime(0, now); // Start from 0
+	    gainNode3.gain.linearRampToValueAtTime(0.020 * volume, now + 0.150);
+	    gainNode3.gain.linearRampToValueAtTime(0.400 * volume, now + 0.150 + 0.100);
+	    // Hold sustain for the duration of the note, then release
+	    gainNode3.gain.exponentialRampToValueAtTime(0.0001, now + (duration / 1000) + 0.140);
+
+	    // Stereo Pan
+	    pannerNode.pan.value = 0.0;
 	},
 
-	2:function(freq,duration){
-		if (freq<56){freq=56}
-		biquadFilter2.frequency.value = freq*1.5;
-		oscillator2.frequency.value = freq;
-		gainNode2.gain.setTargetAtTime(.5*volume, audioCtx.currentTime, .5);
-		gainNode2.gain.setTargetAtTime(0, audioCtx.currentTime + 0.01, duration/7900);
-		biquadFilter2.frequency.setTargetAtTime(freq, audioCtx.currentTime, duration/200);
-	},
+    4:function(freq,duration, time){
+        const now = audioCtx.currentTime;
+        if (freq<44){freq=44}
+        gainNode4.gain.setTargetAtTime(.05*volume, time, .05);
+        oscillator4.frequency.value = freq/2;
+        biquadFilter4.frequency.value = freq*2;
+        oscillator4.frequency.setTargetAtTime(freq/2.5, time, duration/20000);
+        biquadFilter4.frequency.setTargetAtTime(freq, time+.1, duration/30000);
+        gainNode4.gain.setTargetAtTime(0, time + 0.05, duration/30000);
+    },
+    5:function(freq,duration, time){
+        const now = audioCtx.currentTime;
+        if (freq<112){freq=112}
+        var filtervalue = freq/2;
 
-	// 3:function(freq,duration){
-	// 	if (freq<56){freq=56}
-	// 	biquadFilter3.frequency.value = freq/2;
-	// 	oscillator3.frequency.value = freq;
-	// 	gainNode3.gain.value = 0;
-	// 	gainNode3.gain.setTargetAtTime(0.05*volume, audioCtx.currentTime,.5);
-	// 	gainNode3.gain.setTargetAtTime(0, audioCtx.currentTime + 0.05, duration/10900);
-	// 	biquadFilter3b.frequency.value = freq/4;
-	// 	oscillator3b.frequency.value = freq/2.5;
-	// 	gainNode3b.gain.value = 0;
-	// 	gainNode3b.gain.setTargetAtTime(0.1*volume, audioCtx.currentTime,.1);
-	// 	gainNode3b.gain.setTargetAtTime(0, audioCtx.currentTime + 0.05, duration/30900);
-	// },
-	3: function(freq, duration) {
-	      const now = audioCtx.currentTime;
-	      // Ensure minimum frequency
-	      if (freq < 56) { freq = 56; } // A common floor, adjust as needed
+        oscillator5.type = 'square';
+        oscillator5.frequency.value = freq/2;
 
-	      // Oscillator settings
-	      oscillator3.type = 'square';
-	      oscillator3.frequency.value = freq * 0.700;
-	      oscillator3.detune.value = -1.0; // Apply detune
+        //set filter values
+        biquadFilter5.type = "bandpass";
+        biquadFilter5.frequency.value = filtervalue;
+        gainNode5.gain.setTargetAtTime(.01 * 300 / filtervalue *volume, time, .005);
 
-	      // Filter settings
-	      biquadFilter3.type = 'highpass';
-	      biquadFilter3.frequency.value = freq * 0.200;
-	      biquadFilter3.Q.value = 1.400;
-	      biquadFilter3.gain.value = 0.0; // Apply filter gain
-
-	      // Gain envelope (ADSR)
-	      gainNode3.gain.cancelScheduledValues(now);
-	      gainNode3.gain.setValueAtTime(0, now); // Start from 0
-	      gainNode3.gain.linearRampToValueAtTime(0.020 * volume, now + 0.150);
-	      gainNode3.gain.linearRampToValueAtTime(0.400 * volume, now + 0.150 + 0.100);
-	      // Hold sustain for the duration of the note, then release
-	      gainNode3.gain.exponentialRampToValueAtTime(0.0001, now + (duration / 1000) + 0.140);
-
-	      // Stereo Pan
-	      pannerNode.pan.value = 0.0;
-
-	},
-
-	4:function(freq,duration){
-		if (freq<44){freq=44}
-		gainNode4.gain.setTargetAtTime(.05*volume,audioCtx.currentTime,.05);
-		oscillator4.frequency.value = freq/2;
-		biquadFilter4.frequency.value = freq*2;
-		oscillator4.frequency.setTargetAtTime(freq/2.5, audioCtx.currentTime, duration/20000);
-		biquadFilter4.frequency.setTargetAtTime(freq,audioCtx.currentTime+.1, duration/30000);
-		gainNode4.gain.setTargetAtTime(0, audioCtx.currentTime + 0.05, duration/30000);
-	},
-	5:function(freq,duration){
-		if (freq<112){freq=112}
-		var filtervalue = freq/2;
-
-		oscillator5.type = 'square';
-		oscillator5.frequency.value = freq/2;
-
-		//set filter values
-		biquadFilter5.type = "bandpass";
-		biquadFilter5.frequency.value = filtervalue;
-		gainNode5.gain.setTargetAtTime(.01 * 300 / filtervalue *volume, audioCtx.currentTime, .005);
-
-		//set parameters for envelopes
-		gainNode5.gain.setTargetAtTime(0, audioCtx.currentTime + 0.1, duration/22800);
-		biquadFilter5.frequency.setTargetAtTime(freq, audioCtx.currentTime, duration/100 + .2);
-
-	},
-	6:function(freq,duration){
-		if (freq<56){freq=56}
-		oscillator6.type = 'triangle'; // Changed from sine in utility, keeping original here
-		oscillator6.frequency.value = freq/2;
-		gainNode6.gain.setTargetAtTime(.1*volume, audioCtx.currentTime, .1);
-		gainNode6.gain.setTargetAtTime(0, audioCtx.currentTime + duration/4800, duration/14800);
-	},
-	7:function(freq,duration){
-		if (freq<56){freq=56}
-		oscillator7.frequency.setTargetAtTime(freq/2,audioCtx.currentTime, .1);
-		gainNode7.gain.setTargetAtTime(.01*volume,audioCtx.currentTime, duration/15000);;
-		gainNode7.gain.setTargetAtTime(0,audioCtx.currentTime+.5, duration/15000);
-	},
-  8:function(freq,duration){
-    if (freq<56){freq=56}
-    oscillator7.frequency.setTargetAtTime(freq/2,audioCtx.currentTime, .15);
-    gainNode7.gain.setTargetAtTime(.01*volume,audioCtx.currentTime, duration/15000);;
-    gainNode7.gain.setTargetAtTime(0,audioCtx.currentTime+.5, duration/18000);
-    biquadFilter2.frequency.value = freq*1.5;
-		oscillator2.frequency.value = freq;
-		gainNode2.gain.setTargetAtTime(.5*volume, audioCtx.currentTime, .5);
-		gainNode2.gain.setTargetAtTime(0, audioCtx.currentTime + 0.01, duration/1700);
-		biquadFilter2.frequency.setTargetAtTime(freq, audioCtx.currentTime, duration/290);
-  }
+        //set parameters for envelopes
+        gainNode5.gain.setTargetAtTime(0, time + 0.1, duration/22800);
+        biquadFilter5.frequency.setTargetAtTime(freq, time, duration/100 + .2);
+    },
+    6:function(freq,duration, time){
+        const now = audioCtx.currentTime;
+        if (freq<56){freq=56}
+        oscillator6.type = 'triangle'; // Changed from sine in utility, keeping original here
+        oscillator6.frequency.value = freq/2;
+        gainNode6.gain.setTargetAtTime(.1*volume, time, .1);
+        gainNode6.gain.setTargetAtTime(0, time + duration/4800, duration/14800);
+    },
+    7:function(freq,duration, time){
+        const now = audioCtx.currentTime;
+        if (freq<56){freq=56}
+        oscillator7.frequency.setTargetAtTime(freq/2, time, .1);
+        gainNode7.gain.setTargetAtTime(.01*volume, time, duration/15000);
+        gainNode7.gain.setTargetAtTime(0, time+.5, duration/15000);
+    },
+    8:function(freq,duration, time){
+        const now = audioCtx.currentTime;
+        if (freq<56){freq=56}
+        oscillator7.frequency.setTargetAtTime(freq/2, time, .15);
+        gainNode7.gain.setTargetAtTime(.01*volume, time, duration/15000);
+        gainNode7.gain.setTargetAtTime(0, time+.5, duration/18000);
+        biquadFilter2.frequency.value = freq*1.5;
+        oscillator2.frequency.value = freq;
+        gainNode2.gain.setTargetAtTime(.5*volume, time, .5);
+        gainNode2.gain.setTargetAtTime(0, time + 0.01, duration/1700);
+        biquadFilter2.frequency.setTargetAtTime(freq, time, duration/290);
+    }
 };
 
 
@@ -892,14 +874,13 @@ handleTap = function(x,y) {
 }
 
 //this plays the appropriate sound
-handleTapSequence = function() {
+handleTapSequence = function(sequencelocation, time) {
 	var x = sequencelocation;
-	sequencelocation = sequencelocation + screenwidth/96
 	for (var i = 0;i<rectangle.length;i++){
 		for (var j = 0; j < screenwidth/64; j = j+1){
 			if (x + j > rectangle[i].x && rectangle[i].l >= 0 && rectangle[i].played == false && rectangle[i].fading == false) {
 				var finalpitch = 4000 - Math.abs(rectangle[i].h * 10);
-				playSoundLibrary[rectangle[i].sound](4000 - Math.abs(rectangle[i].h * 10/(screenheight/768)), Math.abs(rectangle[i].l *10/(screenwidth/1366)));
+				playSoundLibrary[rectangle[i].sound](4000 - Math.abs(rectangle[i].h * 10/(screenheight/768)), Math.abs(rectangle[i].l *10/(screenwidth/1366)), time);
 				rectangle[i].played = true;
 				ctx.fillStyle = 'pink';
 				ctx.fillRect(sequencelocation,0,15,screenheight);
@@ -907,7 +888,7 @@ handleTapSequence = function() {
 			}
 			if (rectangle[i].x + rectangle[i].l <= x + j && rectangle[i].l <=0 && rectangle[i].played == false && rectangle[i].fading == false){
 			var finalpitch = 4000 - Math.abs(rectangle[i].h * 10)
-				playSoundLibrary[rectangle[i].sound](4000 - Math.abs(rectangle[i].h * 10/(screenheight/768)), Math.abs(rectangle[i].l *10/(screenwidth/1366)));
+				playSoundLibrary[rectangle[i].sound](4000 - Math.abs(rectangle[i].h * 10/(screenheight/768)), Math.abs(rectangle[i].l *10/(screenwidth/1366)), time);
 				rectangle[i].played = true;
 				ctx.fillStyle = 'pink';
 				ctx.fillRect(sequencelocation,0,15,screenheight);
@@ -919,18 +900,14 @@ handleTapSequence = function() {
 
 //this moves the current location on the sequence
 sequenceSwipe = function() {
+	// this function is now for starting a new non-MIDI sequence
+	// MIDI sync will be handled separately
 	clearInterval(sequenceInterval);
-    // When starting a new sequence, 'rectangle' should be populated from 'rectangleghost'
-    // which holds the active, non-fading tiles.
-    // Clear 'rectangle' and deep copy from 'rectangleghost'.
     rectangle = [];
     for (let i = 0; i < rectangleghost.length; i++) {
-        // Deep copy the object to ensure independence
         rectangle.push(JSON.parse(JSON.stringify(rectangleghost[i])));
-        rectangle[i].played = false; // Reset played status for new sequence
+        rectangle[i].played = false;
     }
-
-
 	sequencelocation = 0;
 	globalmodulation = 0;
 	sequenceInterval = setInterval(function(){
@@ -940,105 +917,13 @@ sequenceSwipe = function() {
 			sequenceSwipe();
 			sequencelocation = 0;
 		}
-		handleTapSequence();
+		handleTapSequence(sequencelocation);
 		sequencelocation = sequencelocation + screenwidth/96;
 	}, temporeference);
 }
 
-midiSwipe = function(delay) {
-	ctx.fillStyle = 'grey';
-	ctx.fillRect(sequencelocation,0,15,screenheight);
-	//wondering if i should use >= instead,  may need to adjust if drift occurs
-	if (sequencelocation > screenwidth){
-	//	sequenceSwipe();
-		sequencelocation = 0;
-		rectangle = [];
-		for (let i = 0; i < rectangleghost.length; i++) {
-				// Deep copy the object to ensure independence
-				rectangle.push(JSON.parse(JSON.stringify(rectangleghost[i])));
-				rectangle[i].played = false; // Reset played status for new sequence
-		}
-	}
-	setTimeout(handleTapSequence(), delay);
-}
-
 function randomNumber(min_range, max_range) {
 	return Math.floor((Math.random() * max_range) + min_range);
-}
-let previousTime;
-
-//this starts midi clock midiSync
-midiSync = function() {
-	audioCtx.resume();
-	navigator.requestMIDIAccess().then(onMIDISuccess, onMIDIFailure);
-	function onMIDISuccess(midiAccess) {
-		for (var input of midiAccess.inputs.values()) {
-			input.onmidimessage = onMIDIMessage;
-		}
-	}
-
-	function onMIDIFailure() {
-		console.log('could not access midi device')
-	}
-
-	function onMIDIMessage(event) {
-		const [command, note, velocity] = event.data;
-		const receivedTime = event.receivedTime;
-		const pulseTime = receivedTime - previousTime;
-
-//midi clock
-		if (command === 0xF8) {
-			midiSwipe(pulseTime);
-			// setTimeout(handleTapSequence(sequencelocation), pulseTime);
-		}
-
-		// MIDI Start message
-	  if (command === 0xFA) {
-			sequencelocation = 0;
-	    // Reset sequencer and start playing
-	    // startSequencer();
-	  }
-	  // MIDI Stop message
-	  if (command === 0xFC) {
-			sequencelocation = 0;
-	    // Stop the sequencer
-	    // stopSequencer();
-	  }
-	}
-};
-
-//this makes a random sequence
-generate = function(){
-	var axtemp = new Number(0);
-	var aytemp = new Number(0);
-	var bxtemp = new Number(0);
-	var bytemp = new Number(0);
-	building = true;
-	axtemp = randomNumber(1,10);
-	aytemp = randomNumber(5,screenheight);
-	bxtemp = randomNumber(screenwidth/8,664);
-	bytemp = randomNumber(15,screenheight);
-	pointa.x = axtemp;
-	pointa.y = aytemp;
-	pointb.x = bxtemp;
-	pointb.y = bytemp;
-	rectanglehue = randomNumber(0,360);
-	soundpatch = randomNumber(1,7);
-	buildit();
-	for (i = 0 ; i<4;i =i+1) {
-		building = true;
-		axtemp = randomNumber(i*screenwidth/4,i*64+300);
-		aytemp = randomNumber(5,screenheight);
-		bxtemp = randomNumber(i * screenwidth/4,i*64+300);
-		bytemp = randomNumber(15,screenheight);
-		pointa.x = axtemp;
-		pointa.y = aytemp;
-		pointb.x = bxtemp;
-		pointb.y = bytemp;
-		rectanglehue = randomNumber(0,360);
-		soundpatch = randomNumber(1,7);
-		buildit();
-	}
 }
 
 //this clears the sequencer
@@ -1047,6 +932,125 @@ clear = function(){
 	rectangleghost = [];
 }
 
+midiSync = function() {
+    if (audioCtx.state === 'suspended') {
+        audioCtx.resume();
+    }
+	navigator.requestMIDIAccess().then(onMIDISuccess, onMIDIFailure);
+};
+
+// --- MIDI Clock Sync Setup ---
+const PULSES_PER_QUARTER_NOTE = 24;
+const STEPS_PER_BAR = 16;
+const PULSES_PER_STEP = PULSES_PER_QUARTER_NOTE / 4;
+const STEP_DURATION = (1/4) / 16; // Quarter note duration in beats
+
+let midiClockPulses = 0;
+let currentSequencerStep = -1; // Start at -1 so the first step is 0
+let lastMidiClockPulseTime = 0;
+let startTime = 0; // Global time anchor
+
+function onMIDISuccess(midiAccess) {
+	console.log('MIDI access granted. Listening for MIDI clock messages.');
+	for (const input of midiAccess.inputs.values()) {
+		input.onmidimessage = onMIDIMessage;
+	}
+}
+
+function onMIDIFailure() {
+	console.log('could not access midi device')
+}
+
+function onMIDIMessage(event) {
+	const [command, note, velocity] = event.data;
+	const receivedTime = event.receivedTime / 1000; // Convert to seconds
+
+    // MIDI Clock (0xF8)
+    if (command === 0xF8) {
+        if (playstatus === 'playing') {
+            midiClockPulses++;
+            if (midiClockPulses >= PULSES_PER_STEP) {
+                midiClockPulses = 0;
+
+                // Calculate the duration of a quarter note from the MIDI clock
+                if (lastMidiClockPulseTime > 0) {
+                    const quarterNoteDuration = receivedTime - lastMidiClockPulseTime;
+                    const stepDuration = quarterNoteDuration / PULSES_PER_STEP;
+
+                    currentSequencerStep++;
+                    if(currentSequencerStep >= STEPS_PER_BAR){
+                        currentSequencerStep = 0;
+                    }
+
+                    const timeOfNextStep = startTime + (currentSequencerStep * stepDuration);
+
+                    // Schedule the event with a slight buffer
+                    const buffer = 0.01; // 10ms buffer
+                    const delay = timeOfNextStep - audioCtx.currentTime - buffer;
+
+                    if (delay > 0) {
+                        setTimeout(() => processSequencerStep(timeOfNextStep), delay * 1000);
+                    } else {
+                        // We're late, schedule it for now
+                        processSequencerStep(timeOfNextStep);
+                    }
+                }
+                lastMidiClockPulseTime = receivedTime;
+            }
+        }
+    }
+    // MIDI Start (0xFA)
+    else if (command === 0xFA) {
+        if (audioCtx.state === 'suspended') {
+            audioCtx.resume();
+        }
+        playstatus = 'playing';
+        startTime = receivedTime;
+        currentSequencerStep = -1;
+        midiClockPulses = -1; // Reset to -1 so the first clock pulse triggers step 0
+        lastMidiClockPulseTime = receivedTime;
+
+        // This initial call schedules the first step immediately
+        // The rest will be scheduled by the clock pulses
+        processSequencerStep(startTime);
+
+    }
+    // MIDI Stop (0xFC)
+    else if (command === 0xFC) {
+        playstatus = 'paused';
+        // Clear any pending setTimeout events for the sequencer
+        // A more robust system would track the timeout IDs
+        // For now, stopping the main loop is sufficient
+        stopSequencer();
+    }
+}
+
+function processSequencerStep(scheduledTime) {
+    // Redraw the entire canvas to clear the old bar
+    drawit();
+
+    // Calculate the visual location of the playback bar
+    const sequencelocation = (screenwidth / STEPS_PER_BAR) * currentSequencerStep;
+
+    // Draw the new visual bar
+    ctx.fillStyle = 'grey';
+    ctx.fillRect(sequencelocation, 0, screenwidth / STEPS_PER_BAR, screenheight);
+
+    // Play sounds for the current step
+    handleTapSequence(sequencelocation, scheduledTime);
+
+    // Loop-end logic, which is now triggered by the step counter.
+    if (currentSequencerStep === STEPS_PER_BAR - 1) {
+        // A full loop has completed
+        rectangle = [];
+        for (let i = 0; i < rectangleghost.length; i++) {
+            rectangle.push(JSON.parse(JSON.stringify(rectangleghost[i])));
+            rectangle[i].played = false;
+        }
+    }
+}
+
+// ... rest of the functions (modulationinit, drawLoop, etc.) ...
 modulationinit = function() {
 	clearInterval(modulationInterval);
 	modulationInterval = setInterval(function(){
@@ -1068,14 +1072,6 @@ modulationinit = function() {
 }
 modulationinit();
 
-// tile pad sequencer v 16 key controls
-// (These are duplicates of touch listeners, consolidated above)
-// document.getElementById('filter_down_button').addEventListener('mousedown', function(e){...});
-// ... (and so on for other buttons)
-
-
-// this is the main loop that draws the current state of the sequencer
-// it also runs the necessary checks to see if a tile has been hit and if so, plays the appropriate sound.
 var drawInterval
 drawLoop = function(){
 	clearInterval(drawInterval);
@@ -1090,12 +1086,11 @@ drawLoop();
 const masterFilterFreqInput = document.getElementById('masterFilterFreq');
 const compressorThresholdInput = document.getElementById('compressorThreshold');
 const globalVolumeInput = document.getElementById('globalVolume');
-// const patchSelect = document.getElementById('patchSelect');
+const patchSelect = document.getElementById('patchSelect');
 const testPitchInput = document.getElementById('testPitch');
 const testDurationInput = document.getElementById('testDuration');
 const playTestSoundButton = document.getElementById('playTestSound');
 
-// New elements for patch specific settings
 const oscillatorTypeSelect = document.getElementById('oscillatorType');
 const oscillatorDetuneInput = document.getElementById('oscillatorDetune');
 const filterTypeSelect = document.getElementById('filterType');
@@ -1117,7 +1112,6 @@ const generatePatchCodeButton = document.getElementById('generatePatchCode');
 const generatedCodeTextarea = document.getElementById('generatedCode');
 const copyCodeButton = document.getElementById('copyCodeButton');
 
-// Data structure to hold default/current settings for each patch
 const patchDefinitions = {
     1: {
         oscillatorType: 'square',
@@ -1157,19 +1151,19 @@ const patchDefinitions = {
         lfoAmount: 0,
         lfoTarget: 'none'
     },
-    3: { // Patch 3 is complex with two oscillators/filters, simplifying for utility
-        oscillatorType: 'triangle', // for oscillator3
+    3: {
+        oscillatorType: 'triangle',
         oscillatorDetune: 0,
-        filterType: 'bandpass', // for biquadFilter3
+        filterType: 'bandpass',
         filterQ: 1,
         filterGain: 0,
-        baseFreqMultiplier: 1, // for oscillator3
-        filterFreqMultiplier: 0.5, // for biquadFilter3
-        initialGain: 0.05, // for gainNode3
+        baseFreqMultiplier: 1,
+        filterFreqMultiplier: 0.5,
+        initialGain: 0.05,
         attackTime: 0.01,
         decayTime: 0.1,
         sustainLevel: 0.5,
-        releaseTime: 0.05, // for gainNode3
+        releaseTime: 0.05,
         pan: 0,
         lfoType: 'off',
         lfoFrequency: 0,
@@ -1182,8 +1176,8 @@ const patchDefinitions = {
         filterType: 'lowshelf',
         filterQ: 1,
         filterGain: 0,
-        baseFreqMultiplier: 0.5, // freq/2
-        filterFreqMultiplier: 2, // freq*2
+        baseFreqMultiplier: 0.5,
+        filterFreqMultiplier: 2,
         initialGain: 0.05,
         attackTime: 0.05,
         decayTime: 0.1,
@@ -1201,9 +1195,9 @@ const patchDefinitions = {
         filterType: 'bandpass',
         filterQ: 1,
         filterGain: 0,
-        baseFreqMultiplier: 0.5, // freq/2
-        filterFreqMultiplier: 0.5, // freq/2
-        initialGain: 0.01, // Adjusted based on original logic (300 / filtervalue)
+        baseFreqMultiplier: 0.5,
+        filterFreqMultiplier: 0.5,
+        initialGain: 0.01,
         attackTime: 0.005,
         decayTime: 0.1,
         sustainLevel: 0.5,
@@ -1215,18 +1209,18 @@ const patchDefinitions = {
         lfoTarget: 'none'
     },
     6: {
-        oscillatorType: 'sine', // Original was sine, changed to triangle for some reason. Reverting to sine.
+        oscillatorType: 'sine',
         oscillatorDetune: 0,
-        filterType: 'allpass', // Default, as no specific filter type was set
+        filterType: 'allpass',
         filterQ: 1,
         filterGain: 0,
-        baseFreqMultiplier: 1, // globalmodulation/2 + freq
-        filterFreqMultiplier: 1, // No specific filter freq modulation
+        baseFreqMultiplier: 1,
+        filterFreqMultiplier: 1,
         initialGain: 0.1,
         attackTime: 0.1,
         decayTime: 0.1,
         sustainLevel: 0.5,
-        releaseTime: 0.1, // duration/4800
+        releaseTime: 0.1,
         pan: 0,
         lfoType: 'off',
         lfoFrequency: 0,
@@ -1236,30 +1230,30 @@ const patchDefinitions = {
     7: {
         oscillatorType: 'triangle',
         oscillatorDetune: 0,
-        filterType: 'allpass', // Default, as no specific filter type was set
+        filterType: 'allpass',
         filterQ: 1,
         filterGain: 0,
-        baseFreqMultiplier: 0.5, // freq/2
-        filterFreqMultiplier: 1, // No specific filter freq modulation
+        baseFreqMultiplier: 0.5,
+        filterFreqMultiplier: 1,
         initialGain: 0.01,
         attackTime: 0.1,
         decayTime: 0.1,
         sustainLevel: 0.5,
-        releaseTime: 0.5, // duration/15000
+        releaseTime: 0.5,
         pan: 0,
         lfoType: 'off',
         lfoFrequency: 0,
         lfoAmount: 0,
         lfoTarget: 'none'
     },
-    8: { // Similar to 7 and 2, combining elements
-        oscillatorType: 'triangle', // based on 7
+    8: {
+        oscillatorType: 'triangle',
         oscillatorDetune: 0,
-        filterType: 'bandpass', // based on 2
+        filterType: 'bandpass',
         filterQ: 1,
         filterGain: 0,
-        baseFreqMultiplier: 0.5, // freq/2
-        filterFreqMultiplier: 1.5, // freq*1.5
+        baseFreqMultiplier: 0.5,
+        filterFreqMultiplier: 1.5,
         initialGain: 0.01,
         attackTime: 0.15,
         decayTime: 0.1,
@@ -1273,7 +1267,6 @@ const patchDefinitions = {
     }
 };
 
-// Function to update patch-specific settings in the UI
 function updatePatchSettingsUI(patchNum) {
     const settings = patchDefinitions[patchNum];
     if (settings) {
@@ -1296,42 +1289,34 @@ function updatePatchSettingsUI(patchNum) {
         lfoTargetSelect.value = settings.lfoTarget;
     }
 }
-
-// Event listener for patch selection dropdown
-// patchSelect.addEventListener('change', function() {
-//     updatePatchSettingsUI(parseInt(this.value));
-// });
-
-// Initialize utility inputs with current values
+patchSelect.addEventListener('change', function() {
+    updatePatchSettingsUI(parseInt(this.value));
+});
 masterFilterFreqInput.value = masterFilter.frequency.value;
 compressorThresholdInput.value = compressor.threshold.value;
 globalVolumeInput.value = volume;
-// patchSelect.value = soundpatch; // Set initial selected patch
-// updatePatchSettingsUI(soundpatch); // Load initial patch settings
+patchSelect.value = soundpatch;
+updatePatchSettingsUI(soundpatch);
 
-// Event listener for the Play Test Sound button
 playTestSoundButton.addEventListener('click', function() {
-    // Get values from inputs
     const newMasterFilterFreq = parseFloat(masterFilterFreqInput.value);
     const newCompressorThreshold = parseFloat(compressorThresholdInput.value);
     const newGlobalVolume = parseFloat(globalVolumeInput.value);
-    // const selectedPatch = parseInt(patchSelect.value);
+    const selectedPatch = parseInt(patchSelect.value);
     const testPitch = parseFloat(testPitchInput.value);
     const testDuration = parseFloat(testDurationInput.value);
 
-    // Apply global settings
     if (!isNaN(newMasterFilterFreq)) {
         masterFilter.frequency.value = newMasterFilterFreq;
-        masterFilter.gain.value = newMasterFilterFreq / 5000; // Recalculate gain based on new frequency
+        masterFilter.gain.value = newMasterFilterFreq / 5000;
     }
     if (!isNaN(newCompressorThreshold)) {
         compressor.threshold.value = newCompressorThreshold;
     }
     if (!isNaN(newGlobalVolume)) {
-        volume = newGlobalVolume; // Update the global volume variable
+        volume = newGlobalVolume;
     }
 
-    // Temporarily apply patch-specific settings for testing
     const currentPatchSettings = {
         oscillatorType: oscillatorTypeSelect.value,
         oscillatorDetune: parseFloat(oscillatorDetuneInput.value),
@@ -1352,50 +1337,38 @@ playTestSoundButton.addEventListener('click', function() {
         lfoTarget: lfoTargetSelect.value
     };
 
-    // Play the selected sound patch with test pitch and duration
     if (playSoundLibrary[selectedPatch] && !isNaN(testPitch) && !isNaN(testDuration)) {
-        // Ensure audio context is resumed for iOS/autoplay policies
         if (audioCtx.state === 'suspended') {
             audioCtx.resume();
         }
 
-        // Temporarily reconfigure the global oscillators/filters based on utility settings
         let oscToUse, gainToUse, filterToUse;
         switch(selectedPatch) {
             case 1: oscToUse = oscillator1; gainToUse = gainNode1; filterToUse = biquadFilter1; break;
             case 2: oscToUse = oscillator2; gainToUse = gainNode2; filterToUse = biquadFilter2; break;
-            case 3: oscToUse = oscillator3; gainToUse = gainNode3; filterToUse = biquadFilter3; break; // Simplified for patch 3
+            case 3: oscToUse = oscillator3; gainToUse = gainNode3; filterToUse = biquadFilter3; break;
             case 4: oscToUse = oscillator4; gainToUse = gainNode4; filterToUse = biquadFilter4; break;
             case 5: oscToUse = oscillator5; gainToUse = gainNode5; filterToUse = biquadFilter5; break;
             case 6: oscToUse = oscillator6; gainToUse = gainNode6; filterToUse = biquadFilter6; break;
             case 7: oscToUse = oscillator7; gainToUse = gainNode7; filterToUse = biquadFilter7; break;
-            case 8: oscToUse = oscillator7; gainToUse = gainNode7; filterToUse = biquadFilter2; break; // Reusing for patch 8
+            case 8: oscToUse = oscillator7; gainToUse = gainNode7; filterToUse = biquadFilter2; break;
             default: return;
         }
 
         if (oscToUse) {
             oscToUse.type = currentPatchSettings.oscillatorType;
-            oscToUse.detune.value = currentPatchSettings.oscillatorDetune; // Apply detune
+            oscToUse.detune.value = currentPatchSettings.oscillatorDetune;
             filterToUse.type = currentPatchSettings.filterType;
-            filterToUse.Q.value = currentPatchSettings.filterQ; // Set Q value
-            filterToUse.gain.value = currentPatchSettings.filterGain; // Set filter gain
+            filterToUse.Q.value = currentPatchSettings.filterQ;
+            filterToUse.gain.value = currentPatchSettings.filterGain;
 
-            // Apply ADSR gain envelope
             const now = audioCtx.currentTime;
             gainToUse.gain.cancelScheduledValues(now);
-            gainToUse.gain.setValueAtTime(0, now); // Start from 0
+            gainToUse.gain.setValueAtTime(0, now);
             gainToUse.gain.linearRampToValueAtTime(currentPatchSettings.initialGain * volume, now + currentPatchSettings.attackTime);
             gainToUse.gain.linearRampToValueAtTime(currentPatchSettings.sustainLevel * volume, now + currentPatchSettings.attackTime + currentPatchSettings.decayTime);
-            // The sustain level is held for the duration of the note (testDuration)
-            // Then release starts
-            gainToUse.gain.exponentialRampToValueAtTime(0.0001, now + (testDuration / 1000) + currentPatchSettings.releaseTime); // Release to near zero
-
-            // Apply pan
+            gainToUse.gain.exponentialRampToValueAtTime(0.0001, now + (testDuration / 1000) + currentPatchSettings.releaseTime);
             pannerNode.pan.value = currentPatchSettings.pan;
-
-            // LFO application for testing: This is a simplified representation.
-            // For full LFO, you'd create an LFO oscillator and connect it to the target parameter.
-            // This part primarily sets up for code generation, not complex real-time modulation.
             if (currentPatchSettings.lfoType !== 'off' && currentPatchSettings.lfoFrequency > 0 && currentPatchSettings.lfoAmount > 0 && currentPatchSettings.lfoTarget !== 'none') {
                 infoElement.innerHTML = `Playing Patch ${selectedPatch} with custom settings. LFO will be in generated code.`;
             } else {
@@ -1407,9 +1380,8 @@ playTestSoundButton.addEventListener('click', function() {
     }
 });
 
-// Event listener for Generate Patch Code button
 generatePatchCodeButton.addEventListener('click', function() {
-    // const selectedPatchNum = parseInt(patchSelect.value);
+    const selectedPatchNum = parseInt(patchSelect.value);
     const settings = {
         oscillatorType: oscillatorTypeSelect.value,
         oscillatorDetune: parseFloat(oscillatorDetuneInput.value),
@@ -1430,17 +1402,16 @@ generatePatchCodeButton.addEventListener('click', function() {
         lfoTarget: lfoTargetSelect.value
     };
 
-    // Determine which global nodes this patch uses
     let oscName, gainName, filterName;
     switch(selectedPatchNum) {
         case 1: oscName = 'oscillator1'; gainName = 'gainNode1'; filterName = 'biquadFilter1'; break;
         case 2: oscName = 'oscillator2'; gainName = 'gainNode2'; filterName = 'biquadFilter2'; break;
-        case 3: oscName = 'oscillator3'; gainName = 'gainNode3'; filterName = 'biquadFilter3'; break; // Simplified for code generation
+        case 3: oscName = 'oscillator3'; gainName = 'gainNode3'; filterName = 'biquadFilter3'; break;
         case 4: oscName = 'oscillator4'; gainName = 'gainNode4'; filterName = 'biquadFilter4'; break;
         case 5: oscName = 'oscillator5'; gainName = 'gainNode5'; filterName = 'biquadFilter5'; break;
         case 6: oscName = 'oscillator6'; gainName = 'gainNode6'; filterName = 'biquadFilter6'; break;
         case 7: oscName = 'oscillator7'; gainName = 'gainNode7'; filterName = 'biquadFilter7'; break;
-        case 8: oscName = 'oscillator7'; gainName = 'gainNode7'; filterName = 'biquadFilter2'; break; // Reusing for patch 8
+        case 8: oscName = 'oscillator7'; gainName = 'gainNode7'; filterName = 'biquadFilter2'; break;
         default:
             generatedCodeTextarea.value = "// Select a valid patch to generate code.";
             return;
@@ -1449,75 +1420,66 @@ generatePatchCodeButton.addEventListener('click', function() {
     const generatedCode = `
     ${selectedPatchNum}: function(freq, duration) {
         const now = audioCtx.currentTime;
-        // Ensure minimum frequency
-        if (freq < 56) { freq = 56; } // A common floor, adjust as needed
+        if (freq < 56) { freq = 56; }
 
-        // Oscillator settings
         ${oscName}.type = '${settings.oscillatorType}';
         ${oscName}.frequency.value = freq * ${settings.baseFreqMultiplier.toFixed(3)};
-        ${oscName}.detune.value = ${settings.oscillatorDetune.toFixed(1)}; // Apply detune
+        ${oscName}.detune.value = ${settings.oscillatorDetune.toFixed(1)};
 
-        // Filter settings
         ${filterName}.type = '${settings.filterType}';
         ${filterName}.frequency.value = freq * ${settings.filterFreqMultiplier.toFixed(3)};
         ${filterName}.Q.value = ${settings.filterQ.toFixed(3)};
-        ${filterName}.gain.value = ${settings.filterGain.toFixed(1)}; // Apply filter gain
+        ${filterName}.gain.value = ${settings.filterGain.toFixed(1)};
 
-        // Gain envelope (ADSR)
         ${gainName}.gain.cancelScheduledValues(now);
-        ${gainName}.gain.setValueAtTime(0, now); // Start from 0
+        ${gainName}.gain.setValueAtTime(0, now);
         ${gainName}.gain.linearRampToValueAtTime(${settings.initialGain.toFixed(3)} * volume, now + ${settings.attackTime.toFixed(3)});
         ${gainName}.gain.linearRampToValueAtTime(${settings.sustainLevel.toFixed(3)} * volume, now + ${settings.attackTime.toFixed(3)} + ${settings.decayTime.toFixed(3)});
-        // Hold sustain for the duration of the note, then release
         ${gainName}.gain.exponentialRampToValueAtTime(0.0001, now + (duration / 1000) + ${settings.releaseTime.toFixed(3)});
 
-        // Stereo Pan
         pannerNode.pan.value = ${settings.pan.toFixed(1)};
 
-        // LFO (Low-Frequency Oscillator) - For full functionality, create and connect LFO nodes here.
-        // Example for LFO modulating oscillator frequency:
         ${settings.lfoType !== 'off' && settings.lfoFrequency > 0 && settings.lfoAmount > 0 && settings.lfoTarget === 'frequency' ? `
         // const lfo = audioCtx.createOscillator();
         // lfo.type = '${settings.lfoType}';
         // lfo.frequency.value = ${settings.lfoFrequency.toFixed(3)};
         // const lfoGain = audioCtx.createGain();
-        // lfoGain.gain.value = ${settings.lfoAmount.toFixed(3)}; // LFO depth
+        // lfoGain.gain.value = ${settings.lfoAmount.toFixed(3)};
         // lfo.connect(lfoGain);
-        // lfoGain.connect(${oscName}.frequency); // Connect LFO to oscillator frequency
+        // lfoGain.connect(${oscName}.frequency);
         // lfo.start(now);
-        // lfo.stop(now + (duration / 1000) + ${settings.releaseTime.toFixed(3)} + 0.1); // Stop LFO after sound ends
+        // lfo.stop(now + (duration / 1000) + ${settings.releaseTime.toFixed(3)} + 0.1);
         ` : ''}
         ${settings.lfoType !== 'off' && settings.lfoFrequency > 0 && settings.lfoAmount > 0 && settings.lfoTarget === 'filterFrequency' ? `
         // const lfoFilter = audioCtx.createOscillator();
         // lfoFilter.type = '${settings.lfoType}';
         // lfoFilter.frequency.value = ${settings.lfoFrequency.toFixed(3)};
         // const lfoFilterGain = audioCtx.createGain();
-        // lfoFilterGain.gain.value = ${settings.lfoAmount.toFixed(3)}; // LFO depth
+        // lfoFilterGain.gain.value = ${settings.lfoAmount.toFixed(3)};
         // lfoFilter.connect(lfoFilterGain);
-        // lfoFilterGain.connect(${filterName}.frequency); // Connect LFO to filter frequency
+        // lfoFilterGain.connect(${filterName}.frequency);
         // lfoFilter.start(now);
-        // lfoFilter.stop(now + (duration / 1000) + ${settings.releaseTime.toFixed(3)} + 0.1); // Stop LFO after sound ends
+        // lfoFilter.stop(now + (duration / 1000) + ${settings.releaseTime.toFixed(3)} + 0.1);
         ` : ''}
         ${settings.lfoType !== 'off' && settings.lfoFrequency > 0 && settings.lfoAmount > 0 && settings.lfoTarget === 'gain' ? `
         // const lfoGainMod = audioCtx.createOscillator();
         // lfoGainMod.type = '${settings.lfoType}';
         // lfoGainMod.frequency.value = ${settings.lfoFrequency.toFixed(3)};
         // const lfoGainModAmount = audioCtx.createGain();
-        // lfoGainModAmount.gain.value = ${settings.lfoAmount.toFixed(3)}; // LFO depth
+        // lfoGainModAmount.gain.value = ${settings.lfoAmount.toFixed(3)};
         // lfoGainMod.connect(lfoGainModAmount);
-        // lfoGainModAmount.connect(${gainName}.gain); // Connect LFO to gain
+        // lfoGainModAmount.connect(${gainName}.gain);
         // lfoGainMod.start(now);
-        // lfoGainMod.stop(now + (duration / 1000) + ${settings.releaseTime.toFixed(3)} + 0.1); // Stop LFO after sound ends
+        // lfoGainMod.stop(now + (duration / 1000) + ${settings.releaseTime.toFixed(3)} + 0.1);
         ` : ''}
     },
     `;
     generatedCodeTextarea.value = generatedCode.trim();
 });
 
-// Event listener for Copy Code button
 copyCodeButton.addEventListener('click', function() {
     generatedCodeTextarea.select();
-    document.execCommand('copy'); // Deprecated but widely supported in iframes
+    document.execCommand('copy');
     infoElement.innerHTML = "Patch code copied to clipboard!";
 });
 
