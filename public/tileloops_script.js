@@ -170,8 +170,8 @@ var playSoundLibrary = {
 	      // Gain envelope (ADSR)
 	      gainNode3.gain.cancelScheduledValues(now);
 	      gainNode3.gain.setValueAtTime(0, now); // Start from 0
-	      gainNode3.gain.linearRampToValueAtTime(0.020 * volume, now + 0.150);
-	      gainNode3.gain.linearRampToValueAtTime(0.400 * volume, now + 0.150 + 0.100);
+	      gainNode3.gain.linearRampToValueAtTime(0.010 * volume, now + 0.150);
+	      gainNode3.gain.linearRampToValueAtTime(0.100 * volume, now + 0.150 + 0.100);
 	      // Hold sustain for the duration of the note, then release
 	      gainNode3.gain.exponentialRampToValueAtTime(0.0001, now + (duration / 1000) + 0.140);
 
